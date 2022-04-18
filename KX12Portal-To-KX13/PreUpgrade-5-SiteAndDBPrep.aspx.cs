@@ -203,7 +203,14 @@ update CMS_Tree set NodeTemplateID = null
 update CMS_Document set DocumentPageTemplateID = null
 update CMS_Class set ClassDefaultPageTemplateID = null
 DECLARE @oldTemplates TABLE (PageTemplateID int)
-INSERT INTO @oldTemplates SELECT PageTemplateID FROM [CMS_PageTemplate] WHERE [PageTemplateType] IN ('portal', 'aspx', 'aspxportal') and PageTemplateID not in (select ElementPageTemplateID from CMS_UIElement where ElementPageTemplateID is not null)
+INSERT INTO @oldTemplates SELECT PageTemplateID FROM [CMS_PageTemplate] WHERE [PageTemplateType] IN ('portal', 'aspx', 'aspxportal')
+
+-- Any Roles and UI elements to portal / aspx / aspxportal templates, may need to re-import later.
+delete from CMS_RoleUIElement where ElementID in (
+	select ElementID from CMS_UIElement where ElementPageTemplateID in  (SELECT PageTemplateID FROM @oldTemplates)
+)
+delete from CMS_UIElement where ElementPageTemplateID in  (SELECT PageTemplateID FROM @oldTemplates)
+
 
 DELETE FROM [CMS_MetaFile]
 	WHERE [MetaFileObjectType] = 'cms.pagetemplate'
